@@ -1,23 +1,17 @@
-import React, { useState } from 'react';
-import logo from './logo.svg';
-import './App.css';
-import MessageItem from "@my-chat-app-typescript/shared";
+import React from 'react';
+import { Route, Routes } from "react-router-dom"
+
+import Home from './pages/Home';
 
 
 function App() {
-  const [message, setmessage] = useState<MessageItem>({
-    id: '123',
-    text: "Mitt meddelande!",
-    author: "nolle",
-    timeStamp: new Date()
-  })
   return (
-    <div className="App">
-      <header className="App-header">
-        {message.text} - {message.author}
-      </header>
-    </div>
-  );
+    <>
+      <Routes>
+        <Route path="/" element={<Home />} />
+      </Routes>
+    </>
+  )
 }
 
-export default App;
+export default App
