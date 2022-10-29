@@ -1,34 +1,57 @@
 import React from 'react';
-import { useState } from "react"
-import { v4 as uuidv4 } from "uuid"
+import { useState, useEffect } from "react"
 import "../App.css"
+import MessageItem from "@my-chat-app-typescript/shared"
+import axios from "axios"
+
+axios.defaults.baseURL = "http://localhost:3001"
+
+const fetchMessages = async (): Promise<MessageItem[]> => {
+    const response = await axios.get<MessageItem[]>("message")
+    return response.data
+}
 
 function Home() {
-    const [message, setMessage] = useState("")
-    const [messages, setMessages] = useState<Message[]>([{
-        id: "1",
-        text: "Hello! This is my first message",
-        author: "Erik",
-        timeStamp: new Date().toLocaleString()
-    }])
+    const [message, setMessage] = useState<string>("")
+    const [messages, setMessages] = useState<MessageItem[]>([])
+    const [error, setError] = useState<string | undefined>()
 
-    interface Message {
-        id: string,
-        text: string,
-        author: string,
-        timeStamp: string
-    }
-
-    const sendMessage = (messageText: string) => {
-        const newMessage = {
-            id: uuidv4(),
+    const sendMessage = async (messageText: string): Promise<void> => {
+        const newMessage: MessageItem = {
             text: messageText,
-            author: "Nolle", //store username through JWT
-            timeStamp: new Date().toLocaleString()
+            author: localStorage.getItem("userName"),
+            timeStamp: new Date()
         }
-        setMessages([...messages, newMessage])
-        setMessage("")
+
+        try {
+            await axios.post("/message", newMessage)
+            const response = await axios.get<MessageItem[]>("/message")
+            setMessages(response.data)
+        } catch (err) {
+            setMessages([])
+            setError("Could not get chat history")
+        } finally {
+            setMessage("")
+        }
     }
+
+    useEffect(() => {
+        fetchMessages()
+                .then(setMessages)
+                .catch((_error) => {
+                    setMessages([])
+                    setError("fetchMessages could not fetch messages")
+                })
+        const interval = setInterval(() => {
+            fetchMessages()
+                .then(setMessages)
+                .catch((_error) => {
+                    setMessages([])
+                    setError("fetchMessages could not fetch messages")
+                })
+        }, 5000)
+        return () => clearInterval(interval)
+    }, [])
 
     return (
         <div>
@@ -41,7 +64,7 @@ function Home() {
                         <div key={message.id} className='message'>
                             <div>
                                 <h3 className='inline'>{message.author} </h3>
-                                <p className='inline time'>{message.timeStamp}</p>
+                                <p className='inline time'>{message.timeStamp.toString()}</p>
                             </div>
                             <p>{message.text}</p>
                         </div>
@@ -52,7 +75,7 @@ function Home() {
                 <div className='inputForm'>
                     <input
                         className='textInput'
-                        placeholder="Your message"
+                        placeholder="Message"
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                     />
