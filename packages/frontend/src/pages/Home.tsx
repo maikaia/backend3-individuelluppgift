@@ -4,7 +4,7 @@ import "../App.css"
 import MessageItem from "@my-chat-app-typescript/shared"
 import axios from "axios"
 
-axios.defaults.baseURL = "http://localhost:3001"
+axios.defaults.baseURL = process.env.REACT_APP_CHAT_API || "http://localhost:4000"
 
 const fetchMessages = async (): Promise<MessageItem[]> => {
     const response = await axios.get<MessageItem[]>("message")
